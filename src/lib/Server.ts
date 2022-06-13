@@ -34,18 +34,20 @@ class Server {
       // Cant get the correct type for req.response?
       const { response }: { response: any } = request;
 
-      h.response(request.response).header("hi-roisin", "<3");
+      if (response) {
+        h.response(request.response).header("hi-roisin", "<3");
 
-      if (response && response.isBoom && response.isServer) {
-        const error = response.error || response.message;
+        if (response.isBoom && response.isServer) {
+          const error = response.error || response.message;
 
-        if (!response.data) {
-          console.error(error);
-          console.log(response.stack);
+          if (!response.data) {
+            console.error(error);
+            console.log(response.stack);
+          }
         }
       }
 
-      return response;
+      return h.continue;
     });
 
     server.events.on("response", (req) => {
