@@ -2,6 +2,7 @@ import { Request, ResponseToolkit } from "@hapi/hapi";
 import WeatherApi from "../lib/WeatherApi";
 import { ContainerCradle } from "../lib/types";
 import AppRepository from "../repositories/AppRepository";
+import { getWeatherIconNameForCode } from "../lib/utils";
 
 class AppController {
   repository: AppRepository;
@@ -25,7 +26,7 @@ class AppController {
       };
     } catch (e) {
       console.log(e);
-      return h.response().code(500);
+      return h.response({ error: e }).code(500);
     }
   }
 
@@ -43,25 +44,29 @@ class AppController {
       };
     } catch (e) {
       console.log(e);
-      return h.response().code(500);
+      return h.response({ error: e }).code(500);
     }
   }
 
   async getWeatherForCity(req: Request, h: ResponseToolkit) {
-    const { lat, lng } = await this.repository.getCityCoordinates(req.params.cityId);
-    const { current } = await this.weatherApi.getWeather({ lat, lng });
-    const temperature = Number(current.temp_c).toFixed(0) + "°c";
-    const temperatureFeel = Number(current.feelslike_c).toFixed(0) + "°c";
+    try {
+      const { lat, lng } = await this.repository.getCityCoordinates(req.params.cityId);
+      const { current } = await this.weatherApi.getWeather({ lat, lng });
+      const temperature = Number(current.temp_c).toFixed(0) + "°c";
+      const temperatureFeel = Number(current.feelslike_c).toFixed(0) + "°c";
 
-    return {
-      summary: current.condition.text,
-      icon: `https:${current.condition.icon}`,
-      conditionCode: current.condition.code,
-      isDay: current.is_day === 1,
-      temp: temperature,
-      tempFeel: temperatureFeel,
-      windKph: current.wind_kph,
-    };
+      return {
+        summary: current.condition.text,
+        icon: getWeatherIconNameForCode(current.condition.code),
+        isDay: current.is_day === 1,
+        temp: temperature,
+        tempFeel: temperatureFeel,
+        windKph: current.wind_kph,
+      };
+    } catch (e) {
+      console.log(e);
+      return h.response({ error: e }).code(500);
+    }
   }
 }
 
