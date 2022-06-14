@@ -32,10 +32,10 @@ class AppController {
   async getCitiesForCountry(req: Request, h: ResponseToolkit) {
     try {
       const results = await this.repository.getCitiesForCountry({
-        countryId: req.params.countryId,
+        countryId: parseInt(req.params.countryId),
         searchTerm: req.query.searchTerm,
-        offset: req.query.offset,
-        limit: req.query.limit,
+        offset: parseInt(req.query.offset, 10),
+        limit: parseInt(req.query.limit, 10),
       });
 
       return {

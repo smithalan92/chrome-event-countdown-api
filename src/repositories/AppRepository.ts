@@ -25,7 +25,7 @@ class AppRepository {
     let query_copy = query.clone();
 
     if (searchTerm) {
-      query_copy = query_copy.where(`UPPER(name) LIKE 'UPPER(?)'`, `${searchTerm}%`);
+      query_copy = query_copy.where(this.knex.raw("UPPER(name) LIKE UPPER(?)", [`${searchTerm}%`]));
     }
 
     if (offset) {
