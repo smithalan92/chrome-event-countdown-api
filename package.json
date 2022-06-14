@@ -4,7 +4,7 @@
   "description": "An API to compliment the event countdown chrome extension",
   "main": "index.js",
   "scripts": {
-    "start": "ts-node src/index.ts",
+    "start": "nodemon src/index.ts",
     "build": "tsc"
   },
   "author": "Alan Smith",

@@ -1,15 +1,15 @@
 import { Request, ResponseToolkit } from "@hapi/hapi";
-import DarkSkyApi from "../lib/DarkSkyApi";
+import WeatherApi from "../lib/WeatherApi";
 import { ContainerCradle } from "../lib/types";
 import AppRepository from "../repositories/AppRepository";
 
 class AppController {
   repository: AppRepository;
-  darkSkyApi: DarkSkyApi;
+  weatherApi: WeatherApi;
 
-  constructor({ appRepository, darkSkyApi }: ContainerCradle) {
+  constructor({ appRepository, weatherApi }: ContainerCradle) {
     this.repository = appRepository;
-    this.darkSkyApi = darkSkyApi;
+    this.weatherApi = weatherApi;
   }
 
   async getCountries(req: Request, h: ResponseToolkit) {
@@ -49,15 +49,18 @@ class AppController {
 
   async getWeatherForCity(req: Request, h: ResponseToolkit) {
     const { lat, lng } = await this.repository.getCityCoordinates(req.params.cityId);
-    const { currently } = await this.darkSkyApi.getWeather({ lat, lng });
-    const rainChance = currently.precipProbability * 100 + "%";
-    const temperature = Number(currently.temperature).toFixed(0) + "°c";
+    const { current } = await this.weatherApi.getWeather({ lat, lng });
+    const temperature = Number(current.temp_c).toFixed(0) + "°c";
+    const temperatureFeel = Number(current.feelslike_c).toFixed(0) + "°c";
 
     return {
-      summary: currently.summary,
-      icon: currently.icon,
+      summary: current.condition.text,
+      icon: `https:${current.condition.icon}`,
+      conditionCode: current.condition.code,
+      isDay: current.is_day === 1,
       temp: temperature,
-      chanceOfRain: rainChance,
+      tempFeel: temperatureFeel,
+      windKph: current.wind_kph,
     };
   }
 }

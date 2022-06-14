@@ -4,4 +4,4 @@ A simple ( and very quickly hacked together ) API to get country, city and weath
 
 City & Country Data based off the basic datasource by [SimpleMaps](https://simplemaps.com/data/world-cities) and [Geonames Cities 5000](https://download.geonames.org/export/dump/)
 
-Weather Data provided by [DarkSky](https://darksky.net/dev)
+Weather Data provided by [WeatherApi](https://https://www.weatherapi.com)
