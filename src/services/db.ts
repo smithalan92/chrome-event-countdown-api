@@ -11,6 +11,24 @@ async function makeDb({ env }: { env: Env }) {
 
   await connection.connect();
 
+  const startTimeout = () => {
+    return setInterval(async () => {
+      try {
+        await connection.ping();
+      } catch (err) {
+        console.error("Connection ping failed", err);
+      }
+    }, 5000);
+  };
+
+  startTimeout();
+
+  connection.on("error", async (err) => {
+    console.error("connection error");
+    console.error(err.code); // 'ER_BAD_DB_ERROR'
+    console.log(err);
+  });
+
   return connection;
 }
 
