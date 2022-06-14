@@ -1,5 +1,5 @@
 import * as awilix from "awilix";
-import DarkSkyApi from "./lib/DarkSkyApi";
+import WeatherApi from "./lib/WeatherApi";
 import makeDb from "./services/db";
 import makeEnv from "./services/env";
 
@@ -13,8 +13,8 @@ export default async function configureContainer() {
   const db = await makeDb(container.cradle);
   container.register("db", awilix.asValue(db));
 
-  const darkSkyApi = new DarkSkyApi(container.cradle);
-  container.register("darkSkyApi", awilix.asValue(darkSkyApi));
+  const weatherApi = new WeatherApi(container.cradle);
+  container.register("weatherApi", awilix.asValue(weatherApi));
 
   return container;
 }
