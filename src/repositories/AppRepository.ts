@@ -40,7 +40,7 @@ class AppRepository {
   }
 
   async getCountries({ searchTerm, offset, limit }: BaseQueryParams) {
-    let query = this.knex<Country>("countries").select("id", "name").from("countries").orderBy("name");
+    let query = this.knex<Country>("chrome_event_countdown").select("id", "name").from("countries").orderBy("name");
     query = this._applyOptionstoQuery(query, { searchTerm, offset, limit });
 
     const [results] = await this.db.query<Country[]>(query.toQuery());
@@ -49,7 +49,7 @@ class AppRepository {
   }
 
   async getCitiesForCountry({ countryId, searchTerm, offset, limit }: GetCitiesForCountryParams) {
-    let query = this.knex<City>("countries")
+    let query = this.knex<City>("chrome_event_countdown")
       .select("id", "name", "timezoneName")
       .from("cities")
       .where("countryId", countryId)
@@ -63,7 +63,10 @@ class AppRepository {
   }
 
   async getCityCoordinates(cityId: number) {
-    const expression = this.knex<Coordinates>("countries").select("lat", "lng").from("cities").where("id", cityId);
+    const expression = this.knex<Coordinates>("chrome_event_countdown")
+      .select("lat", "lng")
+      .from("cities")
+      .where("id", cityId);
 
     const [results] = await this.db.query<Coordinates[]>(expression.toString());
 
