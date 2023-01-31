@@ -1,35 +1,16 @@
 import mysql from "mysql2/promise";
-import { Env } from "../lib/types";
+import { ContainerCradle } from "../container.types";
 
-async function makeDb({ env }: { env: Env }) {
-  const connection = await mysql.createConnection({
-    host: env.MYSQL_HOST,
-    user: env.MYSQL_USER,
-    password: env.MYSQL_PASSWORD,
-    database: "countries",
+export default function makePool({ env }: ContainerCradle) {
+  const pool = mysql.createPool({
+    host: env.MYSQL_CHROME_EVENT_COUNTDOWN_HOST,
+    user: env.MYSQL_CHROME_EVENT_COUNTDOWN_USER,
+    password: env.MYSQL_CHROME_EVENT_COUNTDOWN_PASS,
+    database: "chrome_event_countdown",
+    waitForConnections: true,
+    connectionLimit: 5,
+    queueLimit: 0,
   });
 
-  await connection.connect();
-
-  const startTimeout = () => {
-    return setInterval(async () => {
-      try {
-        await connection.ping();
-      } catch (err) {
-        console.error("Connection ping failed", err);
-      }
-    }, 5000);
-  };
-
-  startTimeout();
-
-  connection.on("error", async (err) => {
-    console.error("connection error");
-    console.error(err.code); // 'ER_BAD_DB_ERROR'
-    console.log(err);
-  });
-
-  return connection;
+  return pool;
 }
-
-export default makeDb;

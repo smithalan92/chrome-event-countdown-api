@@ -1,6 +1,6 @@
 import configureContainer from "./container";
-import { Env } from "./lib/types";
 import makeServer from "./server";
+import { Env } from "./services/env.types";
 
 (async () => {
   let container;
@@ -16,11 +16,10 @@ import makeServer from "./server";
   const env: Env = container.resolve("env");
 
   try {
-    const { SERVER_PORT }: Env = container.resolve("env");
     const server = await makeServer(container);
 
     server.start();
-    console.log(`${env.serviceName} started on ${server.server.info.port}`);
+    console.log(`${env.serviceName} started on ${server.port}`);
   } catch (err) {
     console.error(err);
   }

@@ -1,74 +1,73 @@
-import Hapi, { Request, ResponseToolkit } from "@hapi/hapi";
-import { Env, Router } from "./types";
+import Fastify, { FastifyInstance, FastifyRequest, FastifyReply } from "fastify";
+import multipart from "@fastify/multipart";
+import qs from "qs";
+import cors from "@fastify/cors";
+// import TokenRepository from "../repository/TokenRepository";
+import fastifyRequestContext from "@fastify/request-context";
+import { Router } from "../routes/routes.types";
+import { ContainerCradle } from "../container.types";
 
 class Server {
-  server: Hapi.Server;
+  server: FastifyInstance;
+  port: number;
+  // tokenRepository: TokenRepository;
 
-  /**
-   * Server constructor
-   *
-   * @param {object} log
-   */
-  constructor({ env }: { env: Env }) {
-    this.server = this.createServer(env.SERVER_PORT);
+  constructor({ env }: ContainerCradle) {
+    this.server = this.createServer();
+    this.port = env.SERVER_PORT;
+    // this.tokenRepository = tokenRepository;
   }
 
-  createServer(port: number) {
-    const server = Hapi.server({
-      port: port,
-      host: "localhost",
-      routes: {
-        cors: true,
+  createServer() {
+    const server = Fastify({
+      querystringParser: (str) => qs.parse(str, { comma: true }),
+      logger: {
+        level: "info",
       },
     });
 
-    server.ext("onRequest", (request: Request, h: ResponseToolkit) => {
-      if (request.method === "options") {
-        return h.response().code(200).takeover();
-      }
-
-      return h.continue;
+    void server.register(cors);
+    void server.register(fastifyRequestContext, {
+      defaultStoreValues: {
+        userId: 0,
+      },
     });
+    void server.register(multipart);
 
-    server.ext("onPreResponse", (request, h) => {
-      // Cant get the correct type for req.response?
-      const { response }: { response: any } = request;
+    // server.addHook("onRequest", async (request: FastifyRequest, reply: FastifyReply) => {
+    //   if (request.routerPath === "/login") {
+    //     return;
+    //   }
 
-      if (response) {
-        h.response(request.response).header("hi-roisin", "<3");
+    //   const token = request.headers.authorization;
 
-        if (response.isBoom && response.isServer) {
-          const error = response.error || response.message;
+    //   if (!token) {
+    //     return reply.code(401).send({ error: "Not authorised" });
+    //   }
 
-          if (!response.data) {
-            console.error(error);
-            console.log(response.stack);
-          }
-        }
-      }
+    //   const userId = await this.tokenRepository.getUserIdForToken(token);
 
-      return h.continue;
-    });
+    //   if (!userId) {
+    //     return reply.code(401).send({ error: "Not authorised" });
+    //   }
 
-    server.events.on("response", (req) => {
-      // @ts-ignore - Cant get the correct type for req.response?
-      console.log(`${req.path} ${req.response.statusCode}`);
+    //   request.requestContext.set("userId", userId);
+    // });
+
+    server.addHook("onResponse", (request: FastifyRequest, reply: FastifyReply, done) => {
+      console.log(`${request.method.toUpperCase()} ${request.routerPath} ${reply.statusCode}`);
+      done();
     });
 
     return server;
   }
 
-  registerRoutes(routes: Router) {
-    routes.configure(this.server);
+  registerRoutes(router: Router) {
+    router.configure(this.server);
   }
 
-  /**
-   * Start the server
-   *
-   * @param {number} port
-   */
   async start() {
-    await this.server.start();
+    await this.server.listen({ port: this.port });
   }
 }
 

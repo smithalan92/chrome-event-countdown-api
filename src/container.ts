@@ -1,6 +1,7 @@
 import * as awilix from "awilix";
+import DBAgent from "./lib/DBAgent";
 import WeatherApi from "./lib/WeatherApi";
-import makeDb from "./services/db";
+import makePool from "./services/db";
 import makeEnv from "./services/env";
 
 export default async function configureContainer() {
@@ -10,8 +11,10 @@ export default async function configureContainer() {
   const env = makeEnv();
   container.register("env", awilix.asValue(env));
 
-  const db = await makeDb(container.cradle);
-  container.register("db", awilix.asValue(db));
+  const mysqlPool = makePool(container.cradle);
+  const dbAgent = new DBAgent(mysqlPool);
+
+  container.register("db", awilix.asValue(dbAgent));
 
   const weatherApi = new WeatherApi(container.cradle);
   container.register("weatherApi", awilix.asValue(weatherApi));

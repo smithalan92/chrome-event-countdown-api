@@ -1,8 +1,22 @@
-import { Request, ResponseToolkit } from "@hapi/hapi";
 import WeatherApi from "../lib/WeatherApi";
-import { ContainerCradle } from "../lib/types";
 import AppRepository from "../repositories/AppRepository";
 import { getWeatherIconNameForCode } from "../lib/utils";
+import {
+  PossibleErrorResponse,
+  RouteHandler,
+  RouteHandlerWithQueryString,
+  RouteHandlerWithQueryStringAndParams,
+  RouterHandlerWithParams,
+} from "../routes/routes.types";
+import {
+  GenericSearchQuery,
+  GetCitiesForCountryParams,
+  GetCitiesForCountryResponse,
+  GetCountriesResponse,
+  GetWeatherForCityParams,
+  GetWeatherForCityResponse,
+} from "./AppController.types";
+import { ContainerCradle } from "../container.types";
 
 class AppController {
   repository: AppRepository;
@@ -13,7 +27,10 @@ class AppController {
     this.weatherApi = weatherApi;
   }
 
-  async getCountries(req: Request, h: ResponseToolkit) {
+  getCountries: RouteHandlerWithQueryString<GenericSearchQuery, PossibleErrorResponse<GetCountriesResponse>> = async (
+    req,
+    reply
+  ) => {
     try {
       const results = await this.repository.getCountries({
         searchTerm: req.query.searchTerm,
@@ -21,53 +38,60 @@ class AppController {
         limit: req.query.limit,
       });
 
-      return {
+      return reply.code(200).send({
         countries: results,
-      };
+      });
     } catch (e) {
       console.log(e);
-      return h.response({ error: e }).code(500);
+      return reply.code(500).send({ error: "Error occured, try again" });
     }
-  }
+  };
 
-  async getCitiesForCountry(req: Request, h: ResponseToolkit) {
+  getCitiesForCountry: RouteHandlerWithQueryStringAndParams<
+    GenericSearchQuery,
+    GetCitiesForCountryParams,
+    PossibleErrorResponse<GetCitiesForCountryResponse>
+  > = async (req, reply) => {
     try {
       const results = await this.repository.getCitiesForCountry({
-        countryId: parseInt(req.params.countryId),
+        countryId: req.params.countryId,
         searchTerm: req.query.searchTerm,
-        offset: parseInt(req.query.offset, 10),
-        limit: parseInt(req.query.limit, 10),
+        offset: req.query.offset,
+        limit: req.query.limit,
       });
 
-      return {
+      return reply.send({
         cities: results,
-      };
-    } catch (e) {
+      });
+    } catch (e: any) {
       console.log(e);
-      return h.response({ error: e }).code(500);
+      return reply.code(500).send({ error: e.message });
     }
-  }
+  };
 
-  async getWeatherForCity(req: Request, h: ResponseToolkit) {
+  getWeatherForCity: RouterHandlerWithParams<
+    GetWeatherForCityParams,
+    PossibleErrorResponse<GetWeatherForCityResponse>
+  > = async (req, reply) => {
     try {
       const { lat, lng } = await this.repository.getCityCoordinates(req.params.cityId);
       const { current } = await this.weatherApi.getWeather({ lat, lng });
       const temperature = Number(current.temp_c).toFixed(0) + "°c";
       const temperatureFeel = Number(current.feelslike_c).toFixed(0) + "°c";
 
-      return {
+      return reply.send({
         summary: current.condition.text,
         icon: getWeatherIconNameForCode(current.condition.code),
         isDay: current.is_day === 1,
         temp: temperature,
         tempFeel: temperatureFeel,
         windKph: current.wind_kph,
-      };
-    } catch (e) {
+      });
+    } catch (e: any) {
       console.log(e);
-      return h.response({ error: e }).code(500);
+      return reply.code(500).send({ error: e.message });
     }
-  }
+  };
 }
 
 export default AppController;

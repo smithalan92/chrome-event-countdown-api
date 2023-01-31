@@ -45,7 +45,10 @@ async function makeServer(container: awilix.AwilixContainer) {
       cwd: __dirname,
     })
     .forEach((moduleDesc) => {
-      let { name } = moduleDesc;
+      let { name, path } = moduleDesc;
+
+      if (path.endsWith(".types.ts")) return;
+
       name = name.slice(0, 1).toLowerCase() + name.slice(1);
       server.registerRoutes(container.resolve(name));
     });

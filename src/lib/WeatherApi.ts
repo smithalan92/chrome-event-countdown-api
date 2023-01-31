@@ -1,10 +1,11 @@
 import axios from "axios";
-import { Env, WeatherResponse } from "./types";
+import { ContainerCradle } from "../container.types";
+import { WeatherResponse } from "./WeatherApi.types";
 
 class WeatherApi {
   apiToken: string;
 
-  constructor({ env }: { env: Env }) {
+  constructor({ env }: ContainerCradle) {
     this.apiToken = env.WEATHER_API_TOKEN;
   }
 

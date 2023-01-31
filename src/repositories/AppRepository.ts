@@ -1,27 +1,20 @@
 import { Connection } from "mysql2/promise";
 import knex, { Knex } from "knex";
-import { Country, City, Coordinates } from "../lib/types";
-
-interface BaseQueryParams {
-  searchTerm?: string;
-  offset?: number;
-  limit?: number;
-}
-
-interface GetCitiesForCountryParams extends BaseQueryParams {
-  countryId: number;
-}
+import { Country, City, Coordinates, GetCitiesForCountryParams } from "./AppRepository.types";
+import { GenericSearchQuery } from "../controllers/AppController.types";
+import { ContainerCradle } from "../container.types";
+import DBAgent from "../lib/DBAgent";
 
 class AppRepository {
-  db: Connection;
+  db: DBAgent;
   knex: Knex;
 
-  constructor({ db }: { db: Connection }) {
+  constructor({ db }: ContainerCradle) {
     this.db = db;
     this.knex = knex({ client: "mysql" });
   }
 
-  _applyOptionstoQuery(query: Knex.QueryBuilder, { searchTerm, offset, limit }: BaseQueryParams) {
+  _applyOptionstoQuery(query: Knex.QueryBuilder, { searchTerm, offset, limit }: GenericSearchQuery) {
     let query_copy = query.clone();
 
     if (searchTerm) {
@@ -39,11 +32,13 @@ class AppRepository {
     return query_copy;
   }
 
-  async getCountries({ searchTerm, offset, limit }: BaseQueryParams) {
+  async getCountries({ searchTerm, offset, limit }: GenericSearchQuery) {
     let query = this.knex<Country>("chrome_event_countdown").select("id", "name").from("countries").orderBy("name");
     query = this._applyOptionstoQuery(query, { searchTerm, offset, limit });
 
-    const [results] = await this.db.query<Country[]>(query.toQuery());
+    const results = await this.db.runQuery<Country[]>({
+      query: query.toQuery(),
+    });
 
     return results;
   }
@@ -57,7 +52,9 @@ class AppRepository {
 
     query = this._applyOptionstoQuery(query, { searchTerm, offset, limit });
 
-    const [results] = await this.db.query<City[]>(query.toQuery());
+    const results = await this.db.runQuery<City[]>({
+      query: query.toQuery(),
+    });
 
     return results;
   }
@@ -68,9 +65,9 @@ class AppRepository {
       .from("cities")
       .where("id", cityId);
 
-    const [results] = await this.db.query<Coordinates[]>(expression.toString());
-
-    const [cordinates] = results;
+    const [cordinates] = await this.db.runQuery<Coordinates[]>({
+      query: expression.toQuery(),
+    });
 
     if (!cordinates) {
       throw new Error("City not found");

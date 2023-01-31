@@ -1,6 +1,15 @@
-import { Server } from "@hapi/hapi";
+import { FastifyInstance } from "fastify";
+import { ContainerCradle } from "../container.types";
 import AppController from "../controllers/AppController";
-import { Router, ContainerCradle } from "../lib/types";
+import {
+  GenericSearchQuery,
+  GetCitiesForCountryResponse,
+  GetCountriesResponse,
+  GetWeatherForCityParams,
+  GetWeatherForCityResponse,
+} from "../controllers/AppController.types";
+import { GetCitiesForCountryParams } from "../repositories/AppRepository.types";
+import { PossibleErrorResponse, Router } from "./routes.types";
 
 class AppRoutes implements Router {
   controller: AppController;
@@ -9,23 +18,33 @@ class AppRoutes implements Router {
     this.controller = appController;
   }
 
-  configure(server: Server) {
-    server.route({
+  configure(server: FastifyInstance) {
+    server.route<{
+      Querystring: GenericSearchQuery;
+      Reply: PossibleErrorResponse<GetCountriesResponse>;
+    }>({
       method: "GET",
-      path: "/api/countries",
-      handler: this.controller.getCountries.bind(this.controller),
+      url: "/api/countries",
+      handler: this.controller.getCountries,
     });
 
-    server.route({
+    server.route<{
+      Querystring: GenericSearchQuery;
+      Params: GetCitiesForCountryParams;
+      Reply: PossibleErrorResponse<GetCitiesForCountryResponse>;
+    }>({
       method: "GET",
-      path: "/api/countries/{countryId}/cities",
-      handler: this.controller.getCitiesForCountry.bind(this.controller),
+      url: "/api/countries/:countryId/cities",
+      handler: this.controller.getCitiesForCountry,
     });
 
-    server.route({
+    server.route<{
+      Params: GetWeatherForCityParams;
+      Reply: PossibleErrorResponse<GetWeatherForCityResponse>;
+    }>({
       method: "GET",
-      path: "/api/weather/{cityId}",
-      handler: this.controller.getWeatherForCity.bind(this.controller),
+      url: "/api/weather/:cityId",
+      handler: this.controller.getWeatherForCity,
     });
   }
 }
