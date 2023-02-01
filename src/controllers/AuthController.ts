@@ -1,5 +1,8 @@
 import { ContainerCradle } from "../container.types";
 import AuthRepository from "../repositories/AuthRepository";
+import { RouteHandlerWithBody, PossibleErrorResponse } from "../routes/routes.types";
+import { isSame } from "../utils/crypto";
+import { LoginRequest, LoginResponse } from "./AuthController.types";
 
 class AuthController {
   repository: AuthRepository;
@@ -8,17 +11,31 @@ class AuthController {
     this.repository = authRepository;
   }
 
-  // async login(req: Request, h: ResponseToolkit) {
-  //   try {
-  //     const { email, password } = req.payload;
-  //     return {
-  //       email,
-  //     };
-  //   } catch (e) {
-  //     console.log(e);
-  //     return h.response({ error: e }).code(500);
-  //   }
-  // }
+  login: RouteHandlerWithBody<LoginRequest, PossibleErrorResponse<LoginResponse>> = async (req, reply) => {
+    const { email, password } = req.body;
+
+    const user = await this.repository.getUserByEmail(email);
+
+    if (!user) {
+      return reply.code(401).send({ error: "Incorrect user name or password" });
+    }
+
+    if (!isSame(password, user.password)) {
+      return reply.code(401).send({ error: "Incorrect user name or password" });
+    }
+
+    const token = await this.repository.createTokenForUser(user.id);
+
+    return reply
+      .send({
+        user: {
+          id: user.id,
+          email: user.email,
+        },
+        token,
+      })
+      .code(200);
+  };
 }
 
 export default AuthController;

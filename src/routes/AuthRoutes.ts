@@ -1,7 +1,8 @@
 import { FastifyInstance } from "fastify";
 import { ContainerCradle } from "../container.types";
 import AuthController from "../controllers/AuthController";
-import { Router } from "./routes.types";
+import { LoginRequest, LoginResponse } from "../controllers/AuthController.types";
+import { PossibleErrorResponse, Router } from "./routes.types";
 
 class AuthRoutes implements Router {
   controller: AuthController;
@@ -11,11 +12,14 @@ class AuthRoutes implements Router {
   }
 
   configure(server: FastifyInstance) {
-    // server.route({
-    //   method: "POST",
-    //   url: "/api/login",
-    //   handler: this.controller.login,
-    // });
+    server.route<{
+      Body: LoginRequest;
+      Reply: PossibleErrorResponse<LoginResponse>;
+    }>({
+      method: "POST",
+      url: "/api/login",
+      handler: this.controller.login,
+    });
   }
 }
 
