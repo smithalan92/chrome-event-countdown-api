@@ -3,7 +3,7 @@ import { OkPacket } from "mysql2";
 import { randomUUID } from "crypto";
 import DBAgent from "../lib/DBAgent";
 import { ContainerCradle } from "../container.types";
-import { DBUserByEmailResult } from "./AuthRepository.types";
+import { DBUserByEmailResult, DBUserIDForTokenResult } from "./AuthRepository.types";
 
 class AuthRepository {
   db: DBAgent;
@@ -39,6 +39,19 @@ class AuthRepository {
     } else {
       throw new Error("Failed to add new token");
     }
+  }
+
+  async getUserIdForToken(token: string) {
+    const [result] = await this.db.runQuery<DBUserIDForTokenResult[]>({
+      query: `
+        SELECT u.id from users u
+        LEFT JOIN auth_tokens t ON t.userId = u.id
+        WHERE t.token = ?
+      `,
+      values: [token],
+    });
+
+    return result ? result.id : null;
   }
 }
 

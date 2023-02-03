@@ -5,3 +5,7 @@ export interface DBUserByEmailResult extends RowDataPacket {
   email: string;
   password: string;
 }
+
+export interface DBUserIDForTokenResult extends RowDataPacket {
+  id: number;
+}

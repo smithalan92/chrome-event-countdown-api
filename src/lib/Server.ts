@@ -34,26 +34,6 @@ class Server {
     });
     void server.register(multipart);
 
-    // server.addHook("onRequest", async (request: FastifyRequest, reply: FastifyReply) => {
-    //   if (request.routerPath === "/login") {
-    //     return;
-    //   }
-
-    //   const token = request.headers.authorization;
-
-    //   if (!token) {
-    //     return reply.code(401).send({ error: "Not authorised" });
-    //   }
-
-    //   const userId = await this.tokenRepository.getUserIdForToken(token);
-
-    //   if (!userId) {
-    //     return reply.code(401).send({ error: "Not authorised" });
-    //   }
-
-    //   request.requestContext.set("userId", userId);
-    // });
-
     server.addHook("onResponse", (request: FastifyRequest, reply: FastifyReply, done) => {
       console.log(`${request.method.toUpperCase()} ${request.routerPath} ${reply.statusCode}`);
       done();

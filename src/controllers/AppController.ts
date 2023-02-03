@@ -4,17 +4,26 @@ import { getWeatherIconNameForCode } from "../lib/utils";
 import {
   PossibleErrorResponse,
   RouteHandler,
+  RouteHandlerWithBody,
+  RouteHandlerWithBodyAndParams,
   RouteHandlerWithQueryString,
   RouteHandlerWithQueryStringAndParams,
   RouterHandlerWithParams,
 } from "../routes/routes.types";
 import {
+  AddEventBody,
+  AddEventResponse,
+  DeleteEventParams,
   GenericSearchQuery,
+  GetAppDataResponse,
   GetCitiesForCountryParams,
   GetCitiesForCountryResponse,
   GetCountriesResponse,
   GetWeatherForCityParams,
   GetWeatherForCityResponse,
+  UpdateEventBody,
+  UpdateEventParams,
+  UpdateEventResponse,
 } from "./AppController.types";
 import { ContainerCradle } from "../container.types";
 
@@ -38,12 +47,12 @@ class AppController {
         limit: req.query.limit,
       });
 
-      return reply.code(200).send({
+      reply.code(200).send({
         countries: results,
       });
     } catch (e) {
       console.log(e);
-      return reply.code(500).send({ error: "Error occured, try again" });
+      reply.code(500).send({ error: "Error occured, try again" });
     }
   };
 
@@ -60,12 +69,12 @@ class AppController {
         limit: req.query.limit,
       });
 
-      return reply.send({
+      reply.code(200).send({
         cities: results,
       });
     } catch (e: any) {
       console.log(e);
-      return reply.code(500).send({ error: e.message });
+      reply.code(500).send({ error: e.message });
     }
   };
 
@@ -79,7 +88,7 @@ class AppController {
       const temperature = Number(current.temp_c).toFixed(0) + "°c";
       const temperatureFeel = Number(current.feelslike_c).toFixed(0) + "°c";
 
-      return reply.send({
+      reply.code(200).send({
         summary: current.condition.text,
         icon: getWeatherIconNameForCode(current.condition.code),
         isDay: current.is_day === 1,
@@ -89,8 +98,51 @@ class AppController {
       });
     } catch (e: any) {
       console.log(e);
-      return reply.code(500).send({ error: e.message });
+      reply.code(500).send({ error: e.message });
     }
+  };
+
+  getAppData: RouteHandler<PossibleErrorResponse<GetAppDataResponse>> = async (req, reply) => {
+    const userId: number = req.requestContext.get("userId");
+    const events = await this.repository.getEventsForUser(userId);
+
+    reply.code(200).send({ events });
+  };
+
+  addEvent: RouteHandlerWithBody<AddEventBody, PossibleErrorResponse<AddEventResponse>> = async (req, reply) => {
+    const userId: number = req.requestContext.get("userId");
+    const data = req.body;
+
+    const newEventId = await this.repository.addEvent(userId, data);
+
+    const event = await this.repository.getEvent(userId, newEventId);
+
+    reply.code(200).send({ event });
+  };
+
+  updateEvent: RouteHandlerWithBodyAndParams<
+    UpdateEventParams,
+    UpdateEventBody,
+    PossibleErrorResponse<UpdateEventResponse>
+  > = async (req, reply) => {
+    const userId: number = req.requestContext.get("userId");
+    const { eventId } = req.params;
+    const data = req.body;
+
+    await this.repository.updateEvent(userId, eventId, data);
+
+    const event = await this.repository.getEvent(userId, eventId);
+
+    reply.code(200).send({ event });
+  };
+
+  deleteEvent: RouterHandlerWithParams<DeleteEventParams, PossibleErrorResponse> = async (req, reply) => {
+    const userId: number = req.requestContext.get("userId");
+    const { eventId } = req.params;
+
+    await this.repository.deleteEvent({ userId, eventId });
+
+    reply.code(201).send();
   };
 }
 

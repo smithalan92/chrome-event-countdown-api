@@ -6,6 +6,7 @@ import AppRoutes from "./routes/AppRoutes";
 import WeatherApi from "./lib/WeatherApi";
 import { Env } from "./services/env.types";
 import DBAgent from "./lib/DBAgent";
+import makeAuthenticateUserMiddleware from "./middleware/authenticateUser";
 
 export interface ContainerCradle {
   env: Env;
@@ -16,4 +17,5 @@ export interface ContainerCradle {
   authController: AuthController;
   authRepository: AuthRepository;
   weatherApi: WeatherApi;
+  authUserMiddleware: ReturnType<typeof makeAuthenticateUserMiddleware>;
 }

@@ -1,5 +1,6 @@
 import * as awilix from "awilix";
 import Server from "./lib/Server";
+import makeAuthenticateUserMiddleware from "./middleware/authenticateUser";
 
 /**
  * Creates server
@@ -38,6 +39,10 @@ async function makeServer(container: awilix.AwilixContainer) {
       lifetime: awilix.Lifetime.SCOPED,
     },
   });
+
+  // Register any middleware handlers
+  const authUserMiddleware = makeAuthenticateUserMiddleware(container.cradle);
+  container.register("authUserMiddleware", awilix.asValue(authUserMiddleware));
 
   // Then register routes
   awilix

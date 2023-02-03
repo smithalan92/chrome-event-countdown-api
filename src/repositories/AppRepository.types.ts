@@ -20,3 +20,31 @@ export interface Coordinates extends RowDataPacket {
 export interface GetCitiesForCountryParams extends GenericSearchQuery {
   countryId: number;
 }
+
+export interface GetEventsForUserDBResponse extends RowDataPacket {
+  id: number;
+  name: string;
+  dateTime: Date;
+  background: string;
+  cityId: number;
+  cityName: string;
+  timezoneName: string;
+  countryId: number;
+  countryName: string;
+}
+
+export interface ProcessedEvent {
+  id: number;
+  name: string;
+  eventDate: Date;
+  background: string;
+  city: {
+    id: number;
+    name: string;
+    timezoneName: string;
+  };
+  country: {
+    id: number;
+    name: string;
+  };
+}

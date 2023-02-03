@@ -14,6 +14,7 @@ class AuthController {
   login: RouteHandlerWithBody<LoginRequest, PossibleErrorResponse<LoginResponse>> = async (req, reply) => {
     const { email, password } = req.body;
 
+    console.log(email, password);
     const user = await this.repository.getUserByEmail(email);
 
     if (!user) {
@@ -26,15 +27,13 @@ class AuthController {
 
     const token = await this.repository.createTokenForUser(user.id);
 
-    return reply
-      .send({
-        user: {
-          id: user.id,
-          email: user.email,
-        },
-        token,
-      })
-      .code(200);
+    reply.code(200).send({
+      user: {
+        id: user.id,
+        email: user.email,
+      },
+      token,
+    });
   };
 }
 
