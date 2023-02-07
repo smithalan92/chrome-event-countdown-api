@@ -7,6 +7,7 @@ import {
   GetCitiesForCountryParams,
   GetEventsForUserDBResponse,
   ProcessedEvent,
+  GetOrderDBResult,
 } from "./AppRepository.types";
 import { AddEventBody, GenericSearchQuery, UpdateEventBody } from "../controllers/AppController.types";
 import { ContainerCradle } from "../container.types";
@@ -88,6 +89,7 @@ class AppRepository {
       id: event.id,
       name: event.name,
       eventDate: event.dateTime,
+      order: event.order,
       background: event.background,
       city: {
         id: event.cityId,
@@ -108,6 +110,7 @@ class AppRepository {
         "e.name",
         "e.dateTime",
         "e.background",
+        "e.order",
         "ci.id as cityId",
         "ci.name as cityName",
         "ci.timezoneName",
@@ -133,6 +136,7 @@ class AppRepository {
         "e.name",
         "e.dateTime",
         "e.background",
+        "e.order",
         "ci.id as cityId",
         "ci.name as cityName",
         "ci.timezoneName",
@@ -152,13 +156,25 @@ class AppRepository {
     return this._processDBEvent(event);
   }
 
+  async getNextEventOrderForUser(userId: number) {
+    const [result] = await this.db.runQuery<GetOrderDBResult[]>({
+      query: "SELECT MAX(`order`) as `order` FROM events WHERE userId = ?",
+      values: [userId],
+    });
+
+    return result.order + 1;
+  }
+
   async addEvent(userId: number, event: AddEventBody) {
+    const order = await this.getNextEventOrderForUser(userId);
+
     const expression = this.knex("chrome_event_countdown").table("events").insert({
       name: event.name,
       dateTime: event.eventDate,
       background: event.background,
       cityId: event.cityId,
       userId,
+      order,
     });
 
     const result = await this.db.runQuery<OkPacket>({
@@ -204,6 +220,19 @@ class AppRepository {
 
     if (result.affectedRows !== 1) {
       throw new Error("Failed to delete event");
+    }
+  }
+
+  async reorderEvents({ userId, eventIds }: { userId: number; eventIds: number[] }) {
+    const makeQuery = ({ order, eventId, userId }: { order: number; eventId: number; userId: number }) => {
+      return this.knex().table("events").update("order", order).where("id", eventId).where("userId", userId).toQuery();
+    };
+
+    // Not ideal, but it'll work for now
+    for (const idx in eventIds) {
+      await this.db.runQuery({
+        query: makeQuery({ order: parseInt(idx, 10) + 1, eventId: eventIds[idx], userId }),
+      });
     }
   }
 }

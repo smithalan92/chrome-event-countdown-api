@@ -10,6 +10,8 @@ import {
   GetCountriesResponse,
   GetWeatherForCityParams,
   GetWeatherForCityResponse,
+  ReorderEventsBody,
+  ReorderEventsResponse,
   UpdateEventBody,
   UpdateEventParams,
   UpdateEventResponse,
@@ -94,6 +96,16 @@ class AppRoutes implements Router {
       url: "/api/event/:eventId",
       preHandler: this.authUserMiddleware,
       handler: this.controller.deleteEvent,
+    });
+
+    server.route<{
+      Body: ReorderEventsBody;
+      Reply: PossibleErrorResponse<ReorderEventsResponse>;
+    }>({
+      method: "PUT",
+      url: "/api/events/reorder",
+      preHandler: this.authUserMiddleware,
+      handler: this.controller.reorderEvents,
     });
   }
 }

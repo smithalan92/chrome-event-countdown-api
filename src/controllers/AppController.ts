@@ -21,6 +21,8 @@ import {
   GetCountriesResponse,
   GetWeatherForCityParams,
   GetWeatherForCityResponse,
+  ReorderEventsBody,
+  ReorderEventsResponse,
   UpdateEventBody,
   UpdateEventParams,
   UpdateEventResponse,
@@ -47,12 +49,12 @@ class AppController {
         limit: req.query.limit,
       });
 
-      reply.code(200).send({
+      return reply.code(200).send({
         countries: results,
       });
     } catch (e) {
       console.log(e);
-      reply.code(500).send({ error: "Error occured, try again" });
+      return reply.code(500).send({ error: "Error occured, try again" });
     }
   };
 
@@ -69,12 +71,12 @@ class AppController {
         limit: req.query.limit,
       });
 
-      reply.code(200).send({
+      return reply.code(200).send({
         cities: results,
       });
     } catch (e: any) {
       console.log(e);
-      reply.code(500).send({ error: e.message });
+      return reply.code(500).send({ error: e.message });
     }
   };
 
@@ -88,7 +90,7 @@ class AppController {
       const temperature = Number(current.temp_c).toFixed(0) + "°c";
       const temperatureFeel = Number(current.feelslike_c).toFixed(0) + "°c";
 
-      reply.code(200).send({
+      return reply.code(200).send({
         summary: current.condition.text,
         icon: getWeatherIconNameForCode(current.condition.code),
         isDay: current.is_day === 1,
@@ -98,7 +100,7 @@ class AppController {
       });
     } catch (e: any) {
       console.log(e);
-      reply.code(500).send({ error: e.message });
+      return reply.code(500).send({ error: e.message });
     }
   };
 
@@ -106,7 +108,7 @@ class AppController {
     const userId: number = req.requestContext.get("userId");
     const events = await this.repository.getEventsForUser(userId);
 
-    reply.code(200).send({ events });
+    return reply.code(200).send({ events });
   };
 
   addEvent: RouteHandlerWithBody<AddEventBody, PossibleErrorResponse<AddEventResponse>> = async (req, reply) => {
@@ -117,7 +119,7 @@ class AppController {
 
     const event = await this.repository.getEvent(userId, newEventId);
 
-    reply.code(200).send({ event });
+    return reply.code(200).send({ event });
   };
 
   updateEvent: RouteHandlerWithBodyAndParams<
@@ -133,7 +135,7 @@ class AppController {
 
     const event = await this.repository.getEvent(userId, eventId);
 
-    reply.code(200).send({ event });
+    return reply.code(200).send({ event });
   };
 
   deleteEvent: RouterHandlerWithParams<DeleteEventParams, PossibleErrorResponse> = async (req, reply) => {
@@ -142,7 +144,27 @@ class AppController {
 
     await this.repository.deleteEvent({ userId, eventId });
 
-    reply.code(201).send();
+    return reply.code(201).send();
+  };
+
+  reorderEvents: RouteHandlerWithBody<ReorderEventsBody, PossibleErrorResponse<ReorderEventsResponse>> = async (
+    req,
+    reply
+  ) => {
+    const userId: number = req.requestContext.get("userId");
+    const { eventIds } = req.body;
+
+    const _events = await this.repository.getEventsForUser(userId);
+
+    if (_events.length !== eventIds.length) {
+      return reply.code(400).send({ error: "Event Ids do not match existing events" });
+    }
+
+    await this.repository.reorderEvents({ userId, eventIds });
+
+    const events = await this.repository.getEventsForUser(userId);
+
+    return reply.code(200).send({ events });
   };
 }
 

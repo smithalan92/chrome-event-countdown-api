@@ -56,3 +56,11 @@ export type UpdateEventResponse = AddEventResponse;
 export interface DeleteEventParams {
   eventId: number;
 }
+
+export interface ReorderEventsBody {
+  eventIds: number[];
+}
+
+export interface ReorderEventsResponse {
+  events: ProcessedEvent[];
+}

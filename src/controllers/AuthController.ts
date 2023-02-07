@@ -27,7 +27,7 @@ class AuthController {
 
     const token = await this.repository.createTokenForUser(user.id);
 
-    reply.code(200).send({
+    return reply.code(200).send({
       user: {
         id: user.id,
         email: user.email,

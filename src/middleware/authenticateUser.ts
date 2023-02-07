@@ -1,4 +1,4 @@
-import { preHandlerHookHandler, RouteHandler } from "fastify";
+import { preHandlerHookHandler } from "fastify";
 import { ContainerCradle } from "../container.types";
 
 export default function makeAuthenticateUserMiddleware({ authRepository }: ContainerCradle) {
@@ -16,7 +16,6 @@ export default function makeAuthenticateUserMiddleware({ authRepository }: Conta
     }
 
     req.requestContext.set("userId", userId);
-    next();
   };
 
   return handler;

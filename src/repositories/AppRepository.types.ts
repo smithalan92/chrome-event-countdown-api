@@ -25,6 +25,7 @@ export interface GetEventsForUserDBResponse extends RowDataPacket {
   id: number;
   name: string;
   dateTime: Date;
+  order: number;
   background: string;
   cityId: number;
   cityName: string;
@@ -37,6 +38,7 @@ export interface ProcessedEvent {
   id: number;
   name: string;
   eventDate: Date;
+  order: number;
   background: string;
   city: {
     id: number;
@@ -47,4 +49,8 @@ export interface ProcessedEvent {
     id: number;
     name: string;
   };
+}
+
+export interface GetOrderDBResult extends RowDataPacket {
+  order: number;
 }
