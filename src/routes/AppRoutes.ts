@@ -4,10 +4,14 @@ import AppController from "../controllers/AppController";
 import {
   AddEventBody,
   AddEventResponse,
+  AddNoteBody,
+  AddNoteResponse,
+  DeleteNoteParams,
   GenericSearchQuery,
   GetAppDataResponse,
   GetCitiesForCountryResponse,
   GetCountriesResponse,
+  GetNotesResponse,
   GetWeatherForCityParams,
   GetWeatherForCityResponse,
   ReorderEventsBody,
@@ -15,6 +19,9 @@ import {
   UpdateEventBody,
   UpdateEventParams,
   UpdateEventResponse,
+  UpdateNoteBody,
+  UpdateNoteParams,
+  UpdateNoteResponse,
 } from "../controllers/AppController.types";
 import makeAuthenticateUserMiddleware from "../middleware/authenticateUser";
 import { GetCitiesForCountryParams } from "../repositories/AppRepository.types";
@@ -106,6 +113,46 @@ class AppRoutes implements Router {
       url: "/api/events/reorder",
       preHandler: this.authUserMiddleware,
       handler: this.controller.reorderEvents,
+    });
+
+    server.route<{
+      Reply: PossibleErrorResponse<GetNotesResponse>;
+    }>({
+      method: "GET",
+      url: "/api/notes",
+      preHandler: this.authUserMiddleware,
+      handler: this.controller.getNotes,
+    });
+
+    server.route<{
+      Body: AddNoteBody;
+      Reply: PossibleErrorResponse<AddNoteResponse>;
+    }>({
+      method: "POST",
+      url: "/api/notes",
+      preHandler: this.authUserMiddleware,
+      handler: this.controller.addNote,
+    });
+
+    server.route<{
+      Params: UpdateNoteParams;
+      Body: UpdateNoteBody;
+      Reply: PossibleErrorResponse<UpdateNoteResponse>;
+    }>({
+      method: "PUT",
+      url: "/api/notes/:noteId",
+      preHandler: this.authUserMiddleware,
+      handler: this.controller.updateNote,
+    });
+
+    server.route<{
+      Params: DeleteNoteParams;
+      Reply: PossibleErrorResponse;
+    }>({
+      method: "DELETE",
+      url: "/api/notes/:noteId",
+      preHandler: this.authUserMiddleware,
+      handler: this.controller.deleteNote,
     });
   }
 }

@@ -13,12 +13,16 @@ import {
 import {
   AddEventBody,
   AddEventResponse,
+  AddNoteBody,
+  AddNoteResponse,
   DeleteEventParams,
+  DeleteNoteParams,
   GenericSearchQuery,
   GetAppDataResponse,
   GetCitiesForCountryParams,
   GetCitiesForCountryResponse,
   GetCountriesResponse,
+  GetNotesResponse,
   GetWeatherForCityParams,
   GetWeatherForCityResponse,
   ReorderEventsBody,
@@ -26,6 +30,9 @@ import {
   UpdateEventBody,
   UpdateEventParams,
   UpdateEventResponse,
+  UpdateNoteBody,
+  UpdateNoteParams,
+  UpdateNoteResponse,
 } from "./AppController.types";
 import { ContainerCradle } from "../container.types";
 
@@ -165,6 +172,50 @@ class AppController {
     const events = await this.repository.getEventsForUser(userId);
 
     return reply.code(200).send({ events });
+  };
+
+  getNotes: RouteHandler<PossibleErrorResponse<GetNotesResponse>> = async (req, reply) => {
+    const userId: number = req.requestContext.get("userId");
+
+    const notes = await this.repository.getNotes({ userId });
+
+    return reply.code(200).send({ notes });
+  };
+
+  addNote: RouteHandlerWithBody<AddNoteBody, PossibleErrorResponse<AddNoteResponse>> = async (req, reply) => {
+    const userId: number = req.requestContext.get("userId");
+    const { text } = req.body;
+
+    const noteId = await this.repository.addNote({ text, userId });
+
+    const note = await this.repository.getNote({ noteId, userId });
+
+    return reply.code(200).send({ note });
+  };
+
+  updateNote: RouteHandlerWithBodyAndParams<
+    UpdateNoteParams,
+    UpdateNoteBody,
+    PossibleErrorResponse<UpdateNoteResponse>
+  > = async (req, reply) => {
+    const userId: number = req.requestContext.get("userId");
+    const { text } = req.body;
+    const { noteId } = req.params;
+
+    await this.repository.updateNote({ noteId, text, userId });
+
+    const note = await this.repository.getNote({ noteId, userId });
+
+    return reply.code(200).send({ note });
+  };
+
+  deleteNote: RouterHandlerWithParams<DeleteNoteParams, PossibleErrorResponse> = async (req, reply) => {
+    const userId: number = req.requestContext.get("userId");
+    const { noteId } = req.params;
+
+    await this.repository.deleteNote({ noteId, userId });
+
+    return reply.code(204).send();
   };
 }
 

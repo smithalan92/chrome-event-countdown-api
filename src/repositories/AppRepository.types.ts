@@ -54,3 +54,8 @@ export interface ProcessedEvent {
 export interface GetOrderDBResult extends RowDataPacket {
   order: number;
 }
+
+export interface DBNoteResult extends RowDataPacket {
+  id: number;
+  text: string;
+}

@@ -1,4 +1,4 @@
-import { City, Country, ProcessedEvent } from "../repositories/AppRepository.types";
+import { City, Country, DBNoteResult, ProcessedEvent } from "../repositories/AppRepository.types";
 
 export interface GenericSearchQuery {
   searchTerm?: string;
@@ -63,4 +63,32 @@ export interface ReorderEventsBody {
 
 export interface ReorderEventsResponse {
   events: ProcessedEvent[];
+}
+
+export interface GetNotesResponse {
+  notes: DBNoteResult[];
+}
+
+export interface AddNoteBody {
+  text: string;
+}
+
+export interface AddNoteResponse {
+  note: DBNoteResult;
+}
+
+export interface UpdateNoteParams {
+  noteId: number;
+}
+
+export interface UpdateNoteBody {
+  text: string;
+}
+
+export interface UpdateNoteResponse {
+  note: DBNoteResult;
+}
+
+export interface DeleteNoteParams {
+  noteId: number;
 }
